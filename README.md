@@ -1,6 +1,7 @@
 # issuu-pdf-dl
 
-A make-do simple tool to download as PDFs documents on issuu.com without a download option.
+A simple tool to download documents from issuu.com as PDFs,
+even when the download option is not available.
 
 ## Requirements
 
@@ -8,7 +9,7 @@ A make-do simple tool to download as PDFs documents on issuu.com without a downl
  - ImageMagick and its Ruby bindings
  - PDFtk
 
-On a recent version of Ubuntu you can install all requirements with this command:
+On a recent version of Ubuntu you can install all required software with this command:
 
     sudo apt-get install ruby ruby-rmagick pdftk 
 
@@ -18,7 +19,8 @@ On a recent version of Ubuntu you can install all requirements with this command
     
 Example URL: `http://issuu.com/user_name/docs/doc_name`
 
-The document is downloaded in `/tmp` and gets assembled as PDF in the current directory.
+It downloads the pages of the document in a temporary directory 
+and outputs the PDF in the current directory.
 
 
 ## License
