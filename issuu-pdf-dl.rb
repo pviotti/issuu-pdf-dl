@@ -26,8 +26,12 @@ def fetch_pdf(url)
 		puts("#{Time.now.strftime('%Y-%m-%d %X')} - All pages have been downloaded.")
 
 		Dir["#{dir}/*.jpg"].each { |filename| 
+			begin
 				im = Magick::Image.read(filename)
 				im[0].write(filename + ".pdf")
+			rescue
+				puts("Error converting #{filename} to PDF.")
+			end
 			}
 
 		`pdftk #{dir}/*.pdf cat output #{docname}.pdf`
