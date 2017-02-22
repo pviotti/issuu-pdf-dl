@@ -13,7 +13,7 @@ def fetch_pdf(url)
                 "documentUsername=#{username}&name=#{docname}&jsonCallback=C&_1341928054865="
 
     num_pages = open(query_url).read.split('pageCount":')[1].split(",")[0].to_i
-    pub_hash = open(url).grep(/documentId/)[0].split("documentId=")[1].split('"')[0]
+    pub_hash = open(url).grep(/documentId/)[0].split('documentId":"')[1].split('"')[0]
 
 	begin
 		dir = Dir.mktmpdir
