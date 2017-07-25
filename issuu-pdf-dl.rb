@@ -2,7 +2,7 @@
 # Download documents from issuu.com as PDF
 
 require 'open-uri'
-require 'rmagick'
+require 'RMagick'
 
 
 def fetch_pdf(url)
