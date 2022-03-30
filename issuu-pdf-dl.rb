@@ -1,31 +1,31 @@
 #!/usr/bin/env ruby
-# Download documents from issuu.com as PDF
+# Download documents from issuu.com as JPGs and convert them to PDF
 
 require 'open-uri'
 require 'rmagick'
-
+require 'tmpdir'
+require 'json'
 
 def fetch_pdf(url)
     username = url.split("/")[3]
     docname = url.split("/")[5]
-    query_url = "http://api.issuu.com/query?action=issuu.document."\
-                "get_anonymous&format=json&"\
-                "documentUsername=#{username}&name=#{docname}&jsonCallback=C&_1341928054865="
+    pub_hash = URI.open(url).grep(/image.isu.pub/)[0].split('<meta name="twitter:image" content="https://image.isu.pub/')[1].split('/jpg/page_1.jpg">')[0]
+    query_url = "https://search.issuu.com/api/2_0/documents?documentId=#{pub_hash}&responseParams=pagecount"
 
-    num_pages = open(query_url).read.split('pageCount":')[1].split(",")[0].to_i
-    pub_hash = open(url).grep(/documentId/)[0].split('documentId":"')[1].split('"')[0]
-    
-    begin
+    json_data = JSON.parse(URI.open(query_url).read)
+    num_pages = json_data['response']['docs'][0]['pagecount'].to_i
+
+   begin
         dir = Dir.mktmpdir
-        
+
         for x in 1..num_pages do
           open("#{dir}/page_#{"%03d" % x}.jpg","wb")
-            .write(open("http://image.issuu.com/#{pub_hash}/jpg/page_#{x}.jpg").read)
+            .write(URI.open("http://image.issuu.com/#{pub_hash}/jpg/page_#{x}.jpg").read)
           puts(Time.now.strftime('%Y-%m-%d %X') +" - Downloaded: page_#{x}.jpg")
         end
         puts("#{Time.now.strftime('%Y-%m-%d %X')} - All pages have been downloaded.")
 
-        Dir["#{dir}/*.jpg"].each { |filename| 
+        Dir["#{dir}/*.jpg"].each { |filename|
             begin
                 im = Magick::Image.read(filename)
                 im[0].write(filename + ".pdf")
