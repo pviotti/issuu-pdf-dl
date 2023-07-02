@@ -44,13 +44,13 @@ def convert_images_to_pdf(images: List[Image.Image], output_path: str):
 def main():
     parser = ArgumentParser('issuu-pdf-dl', 'Download Issuu documents as PDF.')
     parser.add_argument('document_url', help='URL of the document to download', type=str)
-    parser.add_argument('--output', '-o', help='output file Path', type=str)
+    parser.add_argument('--output', '-o', help='output file path', type=str)
     args = parser.parse_args()
 
     url_parts = args.document_url.split("/")
     user = url_parts[3]
     title = url_parts[5]
-    print(f"Downloading document '{title}' by '{title}'.")
+    print(f"Downloading document '{title}' by '{user}'.")
 
     json_url = f"https://reader3.isu.pub/{user}/{title}/reader3_4.json"
     request = urllib.request.Request(json_url, headers={'Accept-Encoding': 'gzip'})
