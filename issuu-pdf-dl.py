@@ -7,7 +7,7 @@ from argparse import ArgumentParser
 from io import BytesIO
 from typing import List
 
-from PyPDF2 import PdfWriter, PdfReader
+from pypdf import PdfWriter, PdfReader
 from PIL import Image
 
 
