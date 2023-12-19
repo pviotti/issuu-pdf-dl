@@ -1,36 +1,47 @@
 #!/usr/bin/env python3
-import urllib.request
-import json
 import gzip
-
+import json
+import os
+import urllib.request
 from argparse import ArgumentParser
 from io import BytesIO
 from typing import List
 
-from pypdf import PdfWriter, PdfReader
 from PIL import Image
+from pypdf import PdfWriter, PdfReader
+from tqdm import tqdm
 
 
-def retrieve_images_from_urls(url_list: List[str]) -> list[Image.Image]:
-    """Returns a list of in-memory images retrieved from HTTP URLs."""
+def retrieve_images_from_urls(url_list: List[str], download_dir: str) -> None:
+    """Downloads images from URLs and saves them to disk."""
+    for index, url in enumerate(tqdm(url_list, desc="Downloading Images")):
+        image_path = os.path.join(download_dir, f'image_{index}.png')
+        if not os.path.exists(image_path):
+            try:
+                with urllib.request.urlopen(url) as response:
+                    image_data = response.read()
+                    with open(image_path, 'wb') as f:
+                        f.write(image_data)
+            except Exception as e:
+                print(f"Failed to download image from {url}: {str(e)}")
+                break
+
+
+def load_downloaded_images(download_dir: str) -> List[Image.Image]:
+    """Loads images from the download directory into memory."""
     images = []
-    for url in url_list:
-        try:
-            with urllib.request.urlopen(url) as response:
-                image_data = response.read()
-                image = Image.open(BytesIO(image_data))
-                images.append(image)
-        except Exception as e:
-            print(f"Failed to download image from {url}: {str(e)}")
+    for image_file in sorted(os.listdir(download_dir), key=lambda x: int(x.split('_')[1].split('.')[0])):
+        image_path = os.path.join(download_dir, image_file)
+        if os.path.isfile(image_path):
+            images.append(Image.open(image_path))
     return images
 
 
-def convert_images_to_pdf(images: List[Image.Image], output_path: str):
-    """Converts a list of in-memory images to PDF format and writes
-    the resulting PDF file to disk."""
+def convert_images_to_pdf(images: List[Image.Image], output_path: str) -> None:
+    """Converts a list of in-memory images to PDF format and writes the resulting PDF file to disk."""
+    print("Converting images to PDF...")
     pdf_writer = PdfWriter()
-
-    for image in images:
+    for image in tqdm(images, desc="Converting to PDF"):
         with BytesIO() as image_stream:
             image.save(image_stream, format='PDF')
             image_stream.seek(0)
@@ -39,6 +50,7 @@ def convert_images_to_pdf(images: List[Image.Image], output_path: str):
 
     with open(output_path, 'wb') as output_file:
         pdf_writer.write(output_file)
+    print(f"PDF successfully written to: {output_path}")
 
 
 def main():
@@ -62,14 +74,16 @@ def main():
     json_dict = json.loads(data.decode())
 
     pages_urls = ["https://" + page["imageUri"] for page in json_dict["document"]["pages"]]
-    downloaded_images = retrieve_images_from_urls(pages_urls)
-    # Save images as JPG
-    # for index, image in enumerate(downloaded_images):
-    #     image.save(f"./image{index + 1}.jpg")
+
+    download_dir = f'./downloaded_images_{user}_{title}'
+    os.makedirs(download_dir, exist_ok=True)
+
+    retrieve_images_from_urls(pages_urls, download_dir)
+
+    images = load_downloaded_images(download_dir)
 
     output_path = args.output if args.output else f"./{user}-{title}.pdf"
-    convert_images_to_pdf(downloaded_images, output_path)
-    print(f"Output PDF file successfully written to: {output_path}.")
+    convert_images_to_pdf(images, output_path)
 
 
 if __name__ == "__main__":
